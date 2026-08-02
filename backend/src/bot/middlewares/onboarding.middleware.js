@@ -1,5 +1,5 @@
 import { ONBOARDING_STEPS } from '../../constants/onboarding.constants.js';
-import { OnboardingService } from '../services/onboarding.service.js';
+import { OnboardingService } from '../../services/onboardingService.js';
 import { OnboardingController } from '../controllers/onboarding.controller.js';
 import { BOT_MESSAGES } from '../../constants/messages.constants.js';
 
@@ -51,7 +51,7 @@ export const onboardingMiddleware = async (ctx, next) => {
       case ONBOARDING_STEPS.ASK_CUSTOM_TIME: {
         const result = await onboardingService.saveBriefTime(user.telegramId, text);
         if (!result.success) {
-          return ctx.replyWithMarkdownV2(BOT_MESSAGES.ONB_INVALID_TIME);
+          return ctx.reply(BOT_MESSAGES.ONB_INVALID_TIME, { parse_mode: 'HTML' });
         }
         return onboardingController.renderNotificationsQuestion(ctx, result.user);
       }

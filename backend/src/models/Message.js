@@ -2,39 +2,51 @@ import mongoose from 'mongoose';
 
 const messageSchema = new mongoose.Schema(
   {
+    telegramId: {
+      type: String,
+      required: true,
+      index: true,
+    },
     conversationId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Conversation',
-      required: true,
-      index: true
+      required: false,
+      index: true,
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
-      index: true
+      required: false,
+      index: true,
     },
     telegramMessageId: {
       type: Number,
-      required: true
+      required: false,
     },
-    sender: {
+    role: {
       type: String,
-      enum: ['user', 'bot'],
-      required: true
+      enum: ['user', 'model', 'system', 'bot'],
+      required: true,
     },
-    text: {
+    content: {
       type: String,
-      required: true
+      required: true,
+      trim: true,
+    },
+    tokensCount: {
+      type: Number,
+      default: 0,
     },
     metadata: {
       type: mongoose.Schema.Types.Mixed,
-      default: {}
-    }
+      default: {},
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
-export const Message = mongoose.model('Message', messageSchema);
+messageSchema.index({ telegramId: 1, createdAt: -1 });
+
+export const Message = mongoose.models.Message || mongoose.model('Message', messageSchema);

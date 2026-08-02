@@ -3,6 +3,7 @@ import { Profile } from '../models/Profile.js';
 import { generateToken } from '../utils/jwt.js';
 import { AppError } from '../utils/appError.js';
 import { verifyTelegramWebAppData } from '../utils/telegramAuthValidator.js';
+import { findOrCreateUser } from './userService.js';
 
 export const registerUser = async ({ telegramId, firstName, lastName, email, password }) => {
   const existingUser = await User.findOne({ $or: [{ telegramId }, { email }] });
@@ -52,22 +53,7 @@ export const authenticateTelegramWebApp = async (initData, telegramUserData) => 
     throw new AppError('Invalid Telegram authentication data integrity check failed', 401);
   }
 
-  const telegramId = telegramUserData.id.toString();
-  let user = await User.findOne({ telegramId });
-
-  if (!user) {
-    user = await User.create({
-      telegramId,
-      firstName: telegramUserData.first_name || 'User',
-      lastName: telegramUserData.last_name || '',
-      username: telegramUserData.username || ''
-    });
-
-    await Profile.create({
-      userId: user._id,
-      telegramId
-    });
-  }
+  const { user } = await findOrCreateUser(telegramUserData);
 
   const token = generateToken({ id: user._id, telegramId: user.telegramId, role: user.role });
   return { user, token };

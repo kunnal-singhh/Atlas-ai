@@ -1,5 +1,5 @@
 import { Markup } from 'telegraf';
-import { OnboardingService } from '../services/onboarding.service.js';
+import { OnboardingService } from '../../services/onboardingService.js';
 import { BOT_MESSAGES } from '../../constants/messages.constants.js';
 
 export class SettingsController {
@@ -26,11 +26,14 @@ export class SettingsController {
 
     if (ctx.callbackQuery) {
       await ctx.editMessageText(message, {
-        parse_mode: 'MarkdownV2',
+        parse_mode: 'HTML',
         ...keyboard,
       });
     } else {
-      await ctx.replyWithMarkdownV2(message, keyboard);
+      await ctx.reply(message, {
+        parse_mode: 'HTML',
+        ...keyboard,
+      });
     }
   }
 }

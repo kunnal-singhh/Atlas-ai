@@ -1,6 +1,4 @@
-import { BotService } from '../services/bot.service.js';
-
-const botService = new BotService();
+import { findOrCreateUser } from '../../services/userService.js';
 
 export const userMiddleware = async (ctx, next) => {
   const telegramUser = ctx.from;
@@ -11,7 +9,7 @@ export const userMiddleware = async (ctx, next) => {
   }
 
   try {
-    const { user, isNewUser } = await botService.findOrCreateUser({
+    const { user, isNewUser } = await findOrCreateUser({
       telegramId: telegramUser.id,
       username: telegramUser.username,
       firstName: telegramUser.first_name,

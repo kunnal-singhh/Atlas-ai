@@ -1,5 +1,5 @@
-import { User } from '../../models/User.js';
-import { ONBOARDING_STEPS } from '../../constants/onboarding.constants.js';
+import { User } from '../models/User.js';
+import { ONBOARDING_STEPS } from '../constants/onboarding.constants.js';
 
 export class OnboardingService {
   /**

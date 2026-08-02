@@ -7,6 +7,7 @@ import { userMiddleware } from './middlewares/user.middleware.js';
 
 import { BotController } from './controllers/bot.controller.js';
 import { SettingsController } from './controllers/settings.controller.js';
+import { ChatController } from './controllers/chat.controller.js';
 
 import { registerCommandRouter } from './routers/command.router.js';
 import { registerMessageRouter } from './routers/message.router.js';
@@ -18,6 +19,7 @@ export class AtlasBot {
     this.bot = new Telegraf(this.config.token);
     this.botController = new BotController();
     this.settingsController = new SettingsController();
+    this.chatController = new ChatController();
 
     this.initializeMiddlewares();
     this.initializeRouters();
@@ -31,7 +33,7 @@ export class AtlasBot {
 
   initializeRouters() {
     registerCommandRouter(this.bot, this.botController, this.settingsController);
-    registerMessageRouter(this.bot, this.botController);
+    registerMessageRouter(this.bot, this.chatController);
     registerCallbackRouter(this.bot);
   }
 

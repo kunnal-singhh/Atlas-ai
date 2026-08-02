@@ -1,13 +1,14 @@
 import { onboardingMiddleware } from '../middlewares/onboarding.middleware.js';
 
-export const registerMessageRouter = (bot, controller) => {
-  // Execute onboarding step interception BEFORE standard text router
+export const registerMessageRouter = (bot, chatController) => {
+  // Execute onboarding middleware first to intercept active flows
   bot.use(onboardingMiddleware);
 
   bot.on('text', (ctx, next) => {
+    // Pass commands through to command router
     if (ctx.message.text.startsWith('/')) {
       return next();
     }
-    return controller.handleDefaultMessage(ctx);
+    return chatController.handleUserMessage(ctx);
   });
 };

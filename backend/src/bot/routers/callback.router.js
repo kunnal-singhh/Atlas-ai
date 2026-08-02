@@ -1,6 +1,6 @@
 import { OnboardingController } from '../controllers/onboarding.controller.js';
 import { SettingsController } from '../controllers/settings.controller.js';
-import { OnboardingService } from '../services/onboarding.service.js';
+import { OnboardingService } from '../../services/onboardingService.js';
 import { ONBOARDING_STEPS } from '../../constants/onboarding.constants.js';
 import { BOT_MESSAGES } from '../../constants/messages.constants.js';
 
@@ -66,7 +66,7 @@ export const registerCallbackRouter = (bot) => {
       }
       if (data === 'onb:time_custom') {
         await onboardingService.setStep(telegramId, ONBOARDING_STEPS.ASK_CUSTOM_TIME);
-        return ctx.replyWithMarkdownV2(BOT_MESSAGES.ONB_Q_CUSTOM_TIME);
+        return ctx.reply(BOT_MESSAGES.ONB_Q_CUSTOM_TIME, { parse_mode: 'HTML' });
       }
       if (data === 'onb:time_skip') {
         const user = await onboardingService.setStep(telegramId, ONBOARDING_STEPS.ASK_NOTIFICATIONS);

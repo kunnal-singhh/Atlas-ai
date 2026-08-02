@@ -4,7 +4,7 @@ import { ONBOARDING_STEPS } from '../constants/onboarding.constants.js';
 const userSchema = new mongoose.Schema(
   {
     telegramId: {
-      type: Number,
+      type: String,
       required: true,
       unique: true,
       index: true,
@@ -37,6 +37,10 @@ const userSchema = new mongoose.Schema(
     onboardingCompleted: {
       type: Boolean,
       default: false,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
     preferences: {
       profession: { type: String, default: null, trim: true },

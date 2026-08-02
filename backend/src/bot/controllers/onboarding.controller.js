@@ -1,5 +1,5 @@
 import { Markup } from 'telegraf';
-import { OnboardingService } from '../services/onboarding.service.js';
+import { OnboardingService } from '../../services/onboardingService.js';
 import { ResponseHelper } from '../helpers/response.helper.js';
 import { BOT_MESSAGES } from '../../constants/messages.constants.js';
 import {
@@ -25,7 +25,7 @@ export class OnboardingController {
       [Markup.button.callback('⏭️ Skip for Now', 'onb:skip')],
     ]);
 
-    await ctx.replyWithMarkdownV2(BOT_MESSAGES.WELCOME_INTRO, buttons);
+    await ctx.reply(BOT_MESSAGES.WELCOME_INTRO, { parse_mode: 'HTML', ...buttons });
   }
 
   /**
@@ -39,7 +39,7 @@ export class OnboardingController {
     ]);
     rows.push([Markup.button.callback('⏭️ Skip Step', 'onb:prof_skip')]);
 
-    await ctx.replyWithMarkdownV2(BOT_MESSAGES.ONB_Q_PROFESSION, Markup.inlineKeyboard(rows));
+    await ctx.reply(BOT_MESSAGES.ONB_Q_PROFESSION, { parse_mode: 'HTML', ...Markup.inlineKeyboard(rows) });
   }
 
   /**
@@ -62,11 +62,11 @@ export class OnboardingController {
 
     if (ctx.callbackQuery) {
       await ctx.editMessageText(BOT_MESSAGES.ONB_Q_INDUSTRIES, {
-        parse_mode: 'MarkdownV2',
+        parse_mode: 'HTML',
         ...Markup.inlineKeyboard(buttons),
       });
     } else {
-      await ctx.replyWithMarkdownV2(BOT_MESSAGES.ONB_Q_INDUSTRIES, Markup.inlineKeyboard(buttons));
+      await ctx.reply(BOT_MESSAGES.ONB_Q_INDUSTRIES, { parse_mode: 'HTML', ...Markup.inlineKeyboard(buttons) });
     }
   }
 
@@ -79,7 +79,7 @@ export class OnboardingController {
       [Markup.button.callback('⏭️ Skip Step', 'onb:topics_skip')],
     ]);
 
-    await ctx.replyWithMarkdownV2(BOT_MESSAGES.ONB_Q_TOPICS, keyboard);
+    await ctx.reply(BOT_MESSAGES.ONB_Q_TOPICS, { parse_mode: 'HTML', ...keyboard });
   }
 
   /**
@@ -91,7 +91,7 @@ export class OnboardingController {
       [Markup.button.callback('⏭️ Skip Step', 'onb:comp_skip')],
     ]);
 
-    await ctx.replyWithMarkdownV2(BOT_MESSAGES.ONB_Q_COMPANIES, keyboard);
+    await ctx.reply(BOT_MESSAGES.ONB_Q_COMPANIES, { parse_mode: 'HTML', ...keyboard });
   }
 
   /**
@@ -106,7 +106,7 @@ export class OnboardingController {
     buttons.push([Markup.button.callback('⌚ Custom Time', 'onb:time_custom')]);
     buttons.push([Markup.button.callback('⏭️ Skip Step', 'onb:time_skip')]);
 
-    await ctx.replyWithMarkdownV2(BOT_MESSAGES.ONB_Q_BRIEF_TIME, Markup.inlineKeyboard(buttons));
+    await ctx.reply(BOT_MESSAGES.ONB_Q_BRIEF_TIME, { parse_mode: 'HTML', ...Markup.inlineKeyboard(buttons) });
   }
 
   /**
@@ -126,13 +126,13 @@ export class OnboardingController {
 
     if (ctx.callbackQuery) {
       await ctx.editMessageText(BOT_MESSAGES.ONB_Q_NOTIFICATIONS, {
-        parse_mode: 'MarkdownV2',
+        parse_mode: 'HTML',
         ...Markup.inlineKeyboard(buttons),
       });
     } else {
-      await ctx.replyWithMarkdownV2(
+      await ctx.reply(
         BOT_MESSAGES.ONB_Q_NOTIFICATIONS,
-        Markup.inlineKeyboard(buttons)
+        { parse_mode: 'HTML', ...Markup.inlineKeyboard(buttons) }
       );
     }
   }
@@ -142,7 +142,7 @@ export class OnboardingController {
    */
   async complete(ctx) {
     await this.service.completeOnboarding(ctx.from.id);
-    await ctx.replyWithMarkdownV2(BOT_MESSAGES.ONB_COMPLETED);
+    await ctx.reply(BOT_MESSAGES.ONB_COMPLETED, { parse_mode: 'HTML' });
   }
 
   /**
@@ -150,6 +150,6 @@ export class OnboardingController {
    */
   async skip(ctx) {
     await this.service.skipOnboarding(ctx.from.id);
-    await ctx.replyWithMarkdownV2(BOT_MESSAGES.ONB_CANCELLED);
+    await ctx.reply(BOT_MESSAGES.ONB_CANCELLED, { parse_mode: 'HTML' });
   }
 }
