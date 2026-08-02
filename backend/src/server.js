@@ -1,44 +1,31 @@
-import app from './app.js';
-import { config } from './config/env.js';
-import { connectDatabase } from './config/database.js';
-import { initBot, bot } from './bot/bot.js';
-import logger from './utils/logger.js';
+import 'dotenv/config'; // Loads environment variables without require()
+import express from 'express';
+import { connectDatabase } from './config/database.js'; // Points to your existing database.js
+import { AtlasBot } from './bot/index.js';
 
-const startServer = async () => {
-  await connectDatabase();
+const app = express();
+app.use(express.json());
 
-  const server = app.listen(config.port, () => {
-    logger.info(`Atlas AI Express server listening on port ${config.port} in ${config.nodeEnv} mode`);
-  });
+async function bootstrap() {
+  try {
+    // 1. Connect MongoDB via Mongoose
+    await connectDatabase();
+    console.log('Database connected successfully.');
 
-  // Initialize Telegram bot in the background — don't block Express
-  initBot().catch((err) => {
-    logger.error(`Telegram bot failed to initialize: ${err.message}`);
-  });
+    // 2. Initialize Module 4 Telegram Bot
+    const atlasBot = new AtlasBot();
+    await atlasBot.start(app);
 
-  const gracefulShutdown = (signal) => {
-    logger.info(`Received ${signal}. Initiating graceful shutdown...`);
-    
-    bot.stop(signal);
-    logger.info('Telegram bot stopped.');
-
-    server.close(() => {
-      logger.info('Express HTTP server closed.');
-      process.exit(0);
+    // 3. Start Express Server
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`Server listening on port ${PORT}`);
     });
-  };
 
-  process.once('SIGINT', () => gracefulShutdown('SIGINT'));
-  process.once('SIGTERM', () => gracefulShutdown('SIGTERM'));
-};
+  } catch (error) {
+    console.error('Fatal error during application startup:', error);
+    process.exit(1);
+  }
+}
 
-process.on('unhandledRejection', (reason) => {
-  logger.error(`Unhandled Promise Rejection: ${reason}`);
-});
-
-process.on('uncaughtException', (error) => {
-  logger.error(`Uncaught Exception: ${error.message}`, { stack: error.stack });
-  process.exit(1);
-});
-
-startServer();
+bootstrap();

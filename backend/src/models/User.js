@@ -1,77 +1,36 @@
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema(
   {
     telegramId: {
-      type: String,
+      type: Number, // Telegram IDs fit in JS Number (up to 2^53 - 1)
       required: true,
       unique: true,
-      index: true
-    },
-    firstName: {
-      type: String,
-      required: true
-    },
-    lastName: {
-      type: String,
-      default: ''
+      index: true,
     },
     username: {
       type: String,
-      default: ''
+      trim: true,
+      default: null,
     },
-    email: {
+    firstName: {
       type: String,
-      unique: true,
-      sparse: true, // Allows null/undefined without violating unique constraint
-      lowercase: true,
-      trim: true
+      trim: true,
+      default: null,
     },
-    password: {
+    lastName: {
       type: String,
-      select: false // Excluded from default query selections
-    },
-    role: {
-      type: String,
-      enum: ['user', 'admin'],
-      default: 'user'
-    },
-    isBot: {
-      type: Boolean,
-      default: false
+      trim: true,
+      default: null,
     },
     languageCode: {
       type: String,
-      default: 'en'
+      default: 'en',
     },
-    isActive: {
-      type: Boolean,
-      default: true
-    },
-    lastInteractionAt: {
-      type: Date,
-      default: Date.now
-    }
   },
   {
-    timestamps: true
+    timestamps: true, // Automatically manages createdAt and updatedAt
   }
 );
 
-// Pre-save hook to hash password if modified
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password') || !this.password) {
-    return next();
-  }
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
-
-// Instance method to compare passwords
-userSchema.methods.comparePassword = async function (candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
-};
-
-export const User = mongoose.model('User', userSchema);
+export const User = mongoose.models.User || mongoose.model('User', userSchema);
