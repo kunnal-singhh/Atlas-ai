@@ -6,6 +6,8 @@ import { errorMiddleware } from './middlewares/error.middleware.js';
 import { userMiddleware } from './middlewares/user.middleware.js';
 
 import { BotController } from './controllers/bot.controller.js';
+import { SettingsController } from './controllers/settings.controller.js';
+
 import { registerCommandRouter } from './routers/command.router.js';
 import { registerMessageRouter } from './routers/message.router.js';
 import { registerCallbackRouter } from './routers/callback.router.js';
@@ -14,7 +16,8 @@ export class AtlasBot {
   constructor() {
     this.config = getBotConfig();
     this.bot = new Telegraf(this.config.token);
-    this.controller = new BotController();
+    this.botController = new BotController();
+    this.settingsController = new SettingsController();
 
     this.initializeMiddlewares();
     this.initializeRouters();
@@ -27,8 +30,8 @@ export class AtlasBot {
   }
 
   initializeRouters() {
-    registerCommandRouter(this.bot, this.controller);
-    registerMessageRouter(this.bot, this.controller);
+    registerCommandRouter(this.bot, this.botController, this.settingsController);
+    registerMessageRouter(this.bot, this.botController);
     registerCallbackRouter(this.bot);
   }
 
@@ -44,12 +47,9 @@ export class AtlasBot {
       
       console.log(`[Bot Init] Webhook successfully established at: ${fullWebhookUrl}`);
     } else {
-      // launch() remains pending for the lifetime of a long-polling bot, so it
-      // must not block Express startup. Telegraf clears the webhook itself.
-      this.bot.launch({ dropPendingUpdates: true }).catch((error) => {
-        console.error('[Bot Init] Failed to start long polling:', error);
-      });
+      await this.bot.telegram.deleteWebhook({ drop_pending_updates: true });
       console.log('[Bot Init] Long Polling started successfully (Development Mode)...');
+      this.bot.launch();
     }
 
     this.setupGracefulShutdown();

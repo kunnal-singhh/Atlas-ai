@@ -1,17 +1,15 @@
 import { ResponseHelper } from '../helpers/response.helper.js';
 import { BOT_MESSAGES } from '../../constants/messages.constants.js';
-import { escapeMarkdownV2 } from '../helpers/formatter.helper.js';
+import { OnboardingController } from './onboarding.controller.js';
+
+const onboardingController = new OnboardingController();
 
 export class BotController {
   async handleStart(ctx) {
     const { isNewUser, user } = ctx.state;
 
-    if (isNewUser) {
-      await ResponseHelper.sendMarkdown(ctx, BOT_MESSAGES.NEW_USER_WELCOME);
-    } else {
-      const safeFirstName = escapeMarkdownV2(user.firstName || 'User');
-      await ResponseHelper.sendMarkdown(ctx, BOT_MESSAGES.WELCOME_BACK(safeFirstName));
-    }
+    // Trigger onboarding prompt for both new users and restart calls
+    await onboardingController.startOnboardingPrompt(ctx);
   }
 
   async handleHelp(ctx) {
@@ -23,6 +21,6 @@ export class BotController {
   }
 
   async handleDefaultMessage(ctx) {
-    await ctx.reply("I'm listening! Additional features will be enabled as modules load.");
+    await ctx.reply("I'm listening! Type /settings to adjust your preferences.");
   }
 }
