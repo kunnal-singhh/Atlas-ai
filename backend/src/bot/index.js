@@ -44,8 +44,11 @@ export class AtlasBot {
       
       console.log(`[Bot Init] Webhook successfully established at: ${fullWebhookUrl}`);
     } else {
-      await this.bot.telegram.deleteWebhook({ drop_pending_updates: true });
-      this.bot.launch();
+      // launch() remains pending for the lifetime of a long-polling bot, so it
+      // must not block Express startup. Telegraf clears the webhook itself.
+      this.bot.launch({ dropPendingUpdates: true }).catch((error) => {
+        console.error('[Bot Init] Failed to start long polling:', error);
+      });
       console.log('[Bot Init] Long Polling started successfully (Development Mode)...');
     }
 

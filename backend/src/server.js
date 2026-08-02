@@ -1,29 +1,31 @@
-import 'dotenv/config'; // Loads environment variables without require()
-import express from 'express';
-import { connectDatabase } from './config/database.js'; // Points to your existing database.js
+import app from './app.js';
+import { config } from './config/env.js';
+import { connectDatabase } from './config/database.js';
 import { AtlasBot } from './bot/index.js';
-
-const app = express();
-app.use(express.json());
+import logger from './utils/logger.js';
 
 async function bootstrap() {
   try {
-    // 1. Connect MongoDB via Mongoose
     await connectDatabase();
-    console.log('Database connected successfully.');
 
-    // 2. Initialize Module 4 Telegram Bot
     const atlasBot = new AtlasBot();
     await atlasBot.start(app);
 
-    // 3. Start Express Server
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
-      console.log(`Server listening on port ${PORT}`);
+    const server = app.listen(config.port, () => {
+      logger.info(`Atlas AI Express server listening on port ${config.port} in ${config.nodeEnv} mode`);
     });
 
+    const shutdownServer = (signal) => {
+      logger.info(`Received ${signal}. Closing Express HTTP server...`);
+      server.close(() => {
+        logger.info('Express HTTP server closed.');
+      });
+    };
+
+    process.once('SIGINT', () => shutdownServer('SIGINT'));
+    process.once('SIGTERM', () => shutdownServer('SIGTERM'));
   } catch (error) {
-    console.error('Fatal error during application startup:', error);
+    logger.error(`Fatal error during application startup: ${error.message}`, { stack: error.stack });
     process.exit(1);
   }
 }

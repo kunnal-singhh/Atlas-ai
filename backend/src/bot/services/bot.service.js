@@ -1,11 +1,13 @@
-import { User } from '../../models/user.js';
+import { User } from '../../models/User.js';
+import { Profile } from '../../models/Profile.js';
 
 export class BotService {
   /**
    * Lookup existing user or create a new user document in MongoDB using Mongoose.
    */
   async findOrCreateUser(input) {
-    let user = await User.findOne({ telegramId: input.telegramId });
+    const telegramId = String(input.telegramId);
+    let user = await User.findOne({ telegramId });
 
     if (user) {
       // Asynchronously sync profile updates if user details changed on Telegram
@@ -32,11 +34,16 @@ export class BotService {
 
     // Provision new Mongoose User Document
     user = await User.create({
-      telegramId: input.telegramId,
-      username: input.username,
-      firstName: input.firstName,
-      lastName: input.lastName,
+      telegramId,
+      username: input.username || '',
+      firstName: input.firstName || 'User',
+      lastName: input.lastName || '',
       languageCode: input.languageCode || 'en',
+    });
+
+    await Profile.create({
+      userId: user._id,
+      telegramId,
     });
 
     return { user, isNewUser: true };
