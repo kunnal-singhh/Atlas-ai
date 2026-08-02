@@ -6,10 +6,14 @@ import logger from './utils/logger.js';
 
 const startServer = async () => {
   await connectDatabase();
-  await initBot();
 
   const server = app.listen(config.port, () => {
     logger.info(`Atlas AI Express server listening on port ${config.port} in ${config.nodeEnv} mode`);
+  });
+
+  // Initialize Telegram bot in the background — don't block Express
+  initBot().catch((err) => {
+    logger.error(`Telegram bot failed to initialize: ${err.message}`);
   });
 
   const gracefulShutdown = (signal) => {
