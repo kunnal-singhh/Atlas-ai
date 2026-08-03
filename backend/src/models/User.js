@@ -38,6 +38,11 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    settingsStep: {
+      type: String,
+      default: null,
+      index: true,
+    },
     isActive: {
       type: Boolean,
       default: true,

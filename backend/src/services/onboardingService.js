@@ -166,4 +166,87 @@ export class OnboardingService {
       { new: true }
     );
   }
+
+  /**
+   * Set user settings step state safely
+   */
+  async setSettingsStep(telegramId, step) {
+    return User.findOneAndUpdate(
+      { telegramId },
+      { $set: { settingsStep: step } },
+      { new: true }
+    );
+  }
+
+  /**
+   * Update profession directly from settings without changing onboardingStep
+   */
+  async updateProfession(telegramId, profession) {
+    const cleanProfession = profession.trim().substring(0, 100);
+    return User.findOneAndUpdate(
+      { telegramId },
+      {
+        $set: {
+          'preferences.profession': cleanProfession,
+          settingsStep: null,
+          lastPreferencesUpdated: new Date(),
+        },
+      },
+      { new: true }
+    );
+  }
+
+  /**
+   * Update list inputs (topics, companies) directly from settings without changing onboardingStep
+   */
+  async updateListInput(telegramId, field, rawInput) {
+    if (!['topics', 'companies'].includes(field)) {
+      throw new Error(`Invalid list field: ${field}`);
+    }
+
+    const items = rawInput
+      ? rawInput
+          .split(',')
+          .map((item) => item.trim())
+          .filter((item) => item.length > 0)
+          .slice(0, 20)
+      : [];
+
+    const user = await User.findOne({ telegramId });
+    if (!user) throw new Error('User not found');
+
+    const existing = user.preferences[field] || [];
+    const combined = Array.from(new Set([...existing, ...items]));
+
+    user.preferences[field] = combined;
+    user.settingsStep = null;
+    user.lastPreferencesUpdated = new Date();
+
+    await user.save();
+    return user;
+  }
+
+  /**
+   * Update briefing time directly from settings without changing onboardingStep
+   */
+  async updateBriefTime(telegramId, timeString) {
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    if (!timeRegex.test(timeString)) {
+      return { success: false, reason: 'INVALID_FORMAT' };
+    }
+
+    const user = await User.findOneAndUpdate(
+      { telegramId },
+      {
+        $set: {
+          'preferences.briefTime': timeString,
+          settingsStep: null,
+          lastPreferencesUpdated: new Date(),
+        },
+      },
+      { new: true }
+    );
+
+    return { success: true, user };
+  }
 }

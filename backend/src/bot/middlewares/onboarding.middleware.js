@@ -30,11 +30,7 @@ export const onboardingMiddleware = async (ctx, next) => {
 
     switch (user.onboardingStep) {
       case ONBOARDING_STEPS.ASK_PROFESSION: {
-        await onboardingService.saveProfession(user.telegramId, text);
-        const updatedUser = await onboardingService.setStep(
-          user.telegramId,
-          ONBOARDING_STEPS.ASK_INDUSTRIES
-        );
+        const updatedUser = await onboardingService.saveProfession(user.telegramId, text);
         return onboardingController.renderIndustryQuestion(ctx, updatedUser);
       }
 

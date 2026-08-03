@@ -1,0 +1,60 @@
+import { SETTINGS_STEPS } from '../../constants/onboarding.constants.js';
+import { OnboardingService } from '../../services/onboardingService.js';
+import { SettingsController } from '../controllers/settings.controller.js';
+import { BOT_MESSAGES } from '../../constants/messages.constants.js';
+
+const onboardingService = new OnboardingService();
+const settingsController = new SettingsController();
+
+export const settingsMiddleware = async (ctx, next) => {
+  const user = ctx.state?.user;
+
+  // Pass if no user or not currently editing settings
+  if (!user || !user.settingsStep) {
+    return next();
+  }
+
+  // Intercept text messages sent during active settings editing steps
+  if (ctx.message && ctx.message.text) {
+    const text = ctx.message.text.trim();
+
+    // Ignore commands so user can execute /start or /help or /settings
+    if (text.startsWith('/')) {
+      return next();
+    }
+
+    switch (user.settingsStep) {
+      case SETTINGS_STEPS.EDIT_PROFESSION: {
+        await onboardingService.updateProfession(user.telegramId, text);
+        await ctx.reply('✅ Profession updated successfully.');
+        return settingsController.renderSettingsMenu(ctx);
+      }
+
+      case SETTINGS_STEPS.EDIT_TOPICS: {
+        await onboardingService.updateListInput(user.telegramId, 'topics', text);
+        await ctx.reply('✅ Core topics updated successfully.');
+        return settingsController.renderSettingsMenu(ctx);
+      }
+
+      case SETTINGS_STEPS.EDIT_COMPANIES: {
+        await onboardingService.updateListInput(user.telegramId, 'companies', text);
+        await ctx.reply('✅ Companies updated successfully.');
+        return settingsController.renderSettingsMenu(ctx);
+      }
+
+      case SETTINGS_STEPS.EDIT_CUSTOM_TIME: {
+        const result = await onboardingService.updateBriefTime(user.telegramId, text);
+        if (!result.success) {
+          return ctx.reply(BOT_MESSAGES.ONB_INVALID_TIME, { parse_mode: 'HTML' });
+        }
+        await ctx.reply('✅ Briefing time updated successfully.');
+        return settingsController.renderSettingsMenu(ctx);
+      }
+
+      default:
+        return next();
+    }
+  }
+
+  return next();
+};

@@ -32,7 +32,7 @@ export class OnboardingController {
    * Step 1: Profession
    */
   async renderProfessionQuestion(ctx) {
-    await this.service.setStep(ctx.from.id, ONBOARDING_STEPS.ASK_PROFESSION);
+    await this.service.setStep(String(ctx.from.id), ONBOARDING_STEPS.ASK_PROFESSION);
 
     const rows = PRESET_PROFESSIONS.map((prof) => [
       Markup.button.callback(prof, `onb:prof:${prof}`),
@@ -46,7 +46,7 @@ export class OnboardingController {
    * Step 2: Industries (Multi-Select)
    */
   async renderIndustryQuestion(ctx, user) {
-    await this.service.setStep(ctx.from.id, ONBOARDING_STEPS.ASK_INDUSTRIES);
+    await this.service.setStep(String(ctx.from.id), ONBOARDING_STEPS.ASK_INDUSTRIES);
 
     const selected = user.preferences?.industries || [];
     const buttons = PRESET_INDUSTRIES.map((ind) => {
@@ -74,7 +74,7 @@ export class OnboardingController {
    * Step 3: Topics
    */
   async renderTopicsQuestion(ctx) {
-    await this.service.setStep(ctx.from.id, ONBOARDING_STEPS.ASK_TOPICS);
+    await this.service.setStep(String(ctx.from.id), ONBOARDING_STEPS.ASK_TOPICS);
     const keyboard = Markup.inlineKeyboard([
       [Markup.button.callback('⏭️ Skip Step', 'onb:topics_skip')],
     ]);
@@ -86,7 +86,7 @@ export class OnboardingController {
    * Step 4: Companies
    */
   async renderCompaniesQuestion(ctx) {
-    await this.service.setStep(ctx.from.id, ONBOARDING_STEPS.ASK_COMPANIES);
+    await this.service.setStep(String(ctx.from.id), ONBOARDING_STEPS.ASK_COMPANIES);
     const keyboard = Markup.inlineKeyboard([
       [Markup.button.callback('⏭️ Skip Step', 'onb:comp_skip')],
     ]);
@@ -98,7 +98,7 @@ export class OnboardingController {
    * Step 5: Briefing Time
    */
   async renderBriefTimeQuestion(ctx) {
-    await this.service.setStep(ctx.from.id, ONBOARDING_STEPS.ASK_BRIEF_TIME);
+    await this.service.setStep(String(ctx.from.id), ONBOARDING_STEPS.ASK_BRIEF_TIME);
 
     const buttons = PRESET_BRIEF_TIMES.map((time) => [
       Markup.button.callback(time.label, `onb:time:${time.value}`),
@@ -113,7 +113,7 @@ export class OnboardingController {
    * Step 6: Notifications (Multi-Select)
    */
   async renderNotificationsQuestion(ctx, user) {
-    await this.service.setStep(ctx.from.id, ONBOARDING_STEPS.ASK_NOTIFICATIONS);
+    await this.service.setStep(String(ctx.from.id), ONBOARDING_STEPS.ASK_NOTIFICATIONS);
 
     const activeNotifs = user.preferences?.notifications || {};
     const buttons = NOTIFICATION_TYPES.map((type) => {
@@ -141,7 +141,7 @@ export class OnboardingController {
    * Final Completion
    */
   async complete(ctx) {
-    await this.service.completeOnboarding(ctx.from.id);
+    await this.service.completeOnboarding(String(ctx.from.id));
     await ctx.reply(BOT_MESSAGES.ONB_COMPLETED, { parse_mode: 'HTML' });
   }
 
@@ -149,7 +149,7 @@ export class OnboardingController {
    * Skip Flow
    */
   async skip(ctx) {
-    await this.service.skipOnboarding(ctx.from.id);
+    await this.service.skipOnboarding(String(ctx.from.id));
     await ctx.reply(BOT_MESSAGES.ONB_CANCELLED, { parse_mode: 'HTML' });
   }
 }

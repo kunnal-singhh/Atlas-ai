@@ -10,6 +10,10 @@ export const config = {
   webhookUrl: process.env.WEBHOOK_URL,
   mongodbUri: process.env.MONGODB_URI,
   geminiApiKey: process.env.GEMINI_API_KEY,
+  maxRecentMessages: parseInt(process.env.MAX_RECENT_MESSAGES || '10', 10),
+  maxRetrievedMemories: parseInt(process.env.MAX_RETRIEVED_MEMORIES || '5', 10),
+  maxMemorySummaryLength: parseInt(process.env.MAX_MEMORY_SUMMARY_LENGTH || '500', 10),
+  minImportanceScoreThreshold: parseInt(process.env.MIN_IMPORTANCE_SCORE || '3', 10),
 };
 
 if (!config.telegramBotToken) {
@@ -22,4 +26,8 @@ if (!config.mongodbUri) {
 
 if (!config.geminiApiKey) {
   throw new Error('FATAL: GEMINI_API_KEY is missing in environment variables.');
+}
+
+if (!config.jwtSecret) {
+  throw new Error('FATAL: JWT_SECRET is missing in environment variables.');
 }

@@ -11,7 +11,7 @@ export class ChatController {
    * Handles user chat queries
    */
   async handleUserMessage(ctx) {
-    const telegramId = ctx.from.id;
+    const telegramId = String(ctx.from.id);
     const text = ctx.message?.text;
 
     if (!text) return;

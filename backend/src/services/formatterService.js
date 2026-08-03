@@ -11,6 +11,36 @@ export class FormatterService {
   }
 
   /**
+   * Converts standard Markdown formatting to Telegram-compatible HTML tags
+   * @param {string} text
+   * @returns {string}
+   */
+  static markdownToHtml(text) {
+    if (!text) return '';
+
+    // Escape raw HTML special characters
+    let html = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // Code blocks: ```[lang] code ``` -> <pre>code</pre>
+    html = html.replace(/```(?:[a-zA-Z0-9_-]+)?\n([\s\S]*?)```/g, '<pre>$1</pre>');
+    html = html.replace(/```([\s\S]*?)```/g, '<pre>$1</pre>');
+
+    // Inline code: `code` -> <code>code</code>
+    html = html.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+
+    // Bold: **text** -> <b>text</b>
+    html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+
+    // Italic: *text* -> <i>text</i>
+    html = html.replace(/\*(.*?)\*/g, '<i>$1</i>');
+
+    return html;
+  }
+
+  /**
    * Splits long AI responses into <= 4000 character chunks to respect Telegram boundaries
    * @param {string} text 
    * @param {number} limit 
