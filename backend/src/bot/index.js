@@ -1,5 +1,6 @@
 import { Telegraf } from 'telegraf';
 import { getBotConfig } from '../config/bot.config.js';
+import { cronManager } from '../services/cronManager.js';
 
 import { loggingMiddleware } from './middlewares/logging.middleware.js';
 import { errorMiddleware } from './middlewares/error.middleware.js';
@@ -53,13 +54,17 @@ export class AtlasBot {
       console.log('[Bot Init] Long Polling started successfully (Development Mode)...');
       this.bot.launch();
     }
+    
+    // Initialize cron manager with bot instance
+    cronManager.initialize(this.bot);
 
     this.setupGracefulShutdown();
   }
 
   setupGracefulShutdown() {
     const shutdown = (reason) => {
-      console.log(`[Bot Shutdown] Signal received: ${reason}. Stopping Telegraf instance...`);
+      console.log(`[Bot Shutdown] Signal received: ${reason}. Stopping Telegraf instance and cron manager...`);
+      cronManager.stopAll();
       this.bot.stop(reason);
     };
 

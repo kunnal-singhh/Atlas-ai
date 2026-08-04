@@ -6,6 +6,9 @@ export const BOT_MESSAGES = {
     `<b>Atlas AI - Command Center</b>\n\n` +
     `• /start - Reload session or restart onboarding\n` +
     `• /settings - View and edit your preferences\n` +
+    `• /brief - Request an on-demand daily brief (e.g. /brief tech)\n` +
+    `• /schedule - Adjust your briefing schedule\n` +
+    `• /notifications - Toggle specific briefing types\n` +
     `• /help - Display available commands\n\n` +
     `<b>Tip:</b> Send standard messages anytime to interact with Atlas AI.`,
 

@@ -4,6 +4,9 @@ import { SettingsController } from '../controllers/settings.controller.js';
 import { OnboardingService } from '../../services/onboardingService.js';
 import { ONBOARDING_STEPS } from '../../constants/onboarding.constants.js';
 import { BOT_MESSAGES } from '../../constants/messages.constants.js';
+import { renderSchedulePanel, renderTimeSelection } from '../commands/schedule.command.js';
+import { renderNotificationsPanel } from '../commands/notifications.command.js';
+import { SchedulerService } from '../../services/schedulerService.js';
 
 const onboardingController = new OnboardingController();
 const settingsController = new SettingsController();
@@ -156,6 +159,60 @@ export const registerCallbackRouter = (bot) => {
       if (data === 'set:notif_done') {
         await onboardingService.setSettingsStep(telegramId, null);
         return settingsController.renderSettingsMenu(ctx);
+      }
+    }
+
+    // --- SCHEDULER CALLBACK ROUTING ---
+    if (data.startsWith('sched:')) {
+      const telegramId = String(ctx.from.id);
+      
+      if (data === 'sched:close') {
+        return ctx.deleteMessage().catch(() => {});
+      }
+      if (data === 'sched:back') {
+        await onboardingService.setSettingsStep(telegramId, null);
+        return renderSchedulePanel(ctx, telegramId);
+      }
+      
+      if (data.startsWith('sched:edit:')) {
+        const type = data.replace('sched:edit:', '');
+        return renderTimeSelection(ctx, telegramId, type);
+      }
+      
+      if (data.startsWith('sched:set:')) {
+        const parts = data.replace('sched:set:', '').split(':');
+        const type = parts[0];
+        const time = `${parts[1]}:${parts[2]}`;
+        await SchedulerService.setScheduleTime(telegramId, type, time);
+        return renderSchedulePanel(ctx, telegramId);
+      }
+      
+      if (data.startsWith('sched:custom:')) {
+        const type = data.replace('sched:custom:', '');
+        await onboardingService.setSettingsStep(telegramId, `EDIT_CUSTOM_TIME_${type}`);
+        return ctx.editMessageText(BOT_MESSAGES.ONB_Q_CUSTOM_TIME, {
+          parse_mode: 'HTML',
+          ...Markup.inlineKeyboard([[Markup.button.callback('🔙 Cancel', 'sched:back')]])
+        });
+      }
+    }
+
+    // --- NOTIFICATIONS CALLBACK ROUTING ---
+    if (data.startsWith('notif:')) {
+      const telegramId = String(ctx.from.id);
+      
+      if (data === 'notif:close') {
+        return ctx.deleteMessage().catch(() => {});
+      }
+      
+      if (data.startsWith('notif:toggle:')) {
+        const type = data.replace('notif:toggle:', '');
+        if (type === 'pauseAll') {
+          await SchedulerService.togglePauseAll(telegramId);
+        } else {
+          await SchedulerService.toggleBriefing(telegramId, type);
+        }
+        return renderNotificationsPanel(ctx, telegramId);
       }
     }
 

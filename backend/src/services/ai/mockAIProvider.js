@@ -34,12 +34,23 @@ export class MockAIProvider {
       return this._summarizeConversation(userMessage);
     }
 
-    // ── Route 3: Finance Intelligence (JSON) ──
+    // ── Route 3: Daily Briefing / Summary / Digest (Special Intercepts) ──
+    if (sysLower.includes('daily briefing engine') || sysLower.includes('morning briefing')) {
+      return this._mockMorningBriefingResponse(systemInstruction);
+    }
+    if (sysLower.includes('evening summary') || sysLower.includes('evening recap')) {
+      return this._mockEveningSummaryResponse(systemInstruction);
+    }
+    if (sysLower.includes('weekly digest') || sysLower.includes('weekly intelligence digest')) {
+      return this._mockWeeklyDigestResponse(systemInstruction);
+    }
+
+    // ── Route 4: Finance Intelligence (JSON) ──
     if (isJsonMode || (sysLower.includes('financial intelligence') && sysLower.includes('articles to analyze'))) {
       return this._financeIntelligence(systemInstruction);
     }
 
-    // ── Route 4: Standard Conversation ──
+    // ── Route 5: Standard Conversation ──
     return this._conversation(userMessage, systemInstruction);
   }
 
@@ -415,5 +426,73 @@ export class MockAIProvider {
     }
 
     return `That's a great point. Let me share my thoughts:\n\nBased on what you've mentioned, there are several dimensions worth considering here. The key is to weigh both the immediate implications and the longer-term trajectory.\n\n**My Take**:\n• Consider the broader context and how it connects to your goals\n• Look for patterns and signals rather than reacting to individual data points\n• A structured approach will yield better outcomes than ad-hoc decisions${contextNote}\n\nWould you like to explore any of these angles further? I'm happy to dig deeper. 🎯`;
+  }
+
+  _mockMorningBriefingResponse(systemInstruction) {
+    const nameMatch = systemInstruction.match(/- Name:\s*(.+)/i);
+    const name = nameMatch ? nameMatch[1].trim() : 'there';
+
+    const companiesMatch = systemInstruction.match(/- Companies Followed:\s*(.+)/i);
+    const companiesStr = companiesMatch ? companiesMatch[1].trim() : '';
+    const companies = companiesStr.split(',').map(c => c.trim()).filter(Boolean);
+
+    const professionMatch = systemInstruction.match(/- Profession:\s*(.+)/i);
+    const profession = professionMatch ? professionMatch[1].trim() : '';
+
+    const industriesMatch = systemInstruction.match(/- Industries:\s*(.+)/i);
+    const industries = industriesMatch ? industriesMatch[1].trim() : '';
+
+    // Check memory context
+    const memories = [];
+    const memoryBlock = systemInstruction.match(/USER MEMORIES:\n([\s\S]*?)\n\nMARKET/i);
+    if (memoryBlock) {
+      memoryBlock[1].split('\n').forEach(line => {
+        const m = line.match(/^-\s*\[(\w+)\]\s*(.+)/i);
+        if (m) memories.push(m[2].trim());
+      });
+    }
+
+    let prioritySection = '';
+    if (companies.length > 0) {
+      const primary = companies[0].toUpperCase();
+      prioritySection = `\n\n📈 <b>Because you follow ${primary}</b>,\nthe earnings announcement and related data releases should be your top priority.`;
+    }
+
+    let newsSection = '';
+    if (systemInstruction.toLowerCase().includes('nvidia')) {
+      newsSection += `\n• <b>NVIDIA Launches Blackwell AI Chips</b> (#NVDA)\nNVIDIA announced the commercial availability of its next-generation Blackwell GPUs. This was first reported by Reuters. NVIDIA is at the center of this development.`;
+    }
+    if (systemInstruction.toLowerCase().includes('pfizer')) {
+      newsSection += `\n• <b>Pfizer Breakthrough in Cancer Treatment</b> (#PFE)\nPfizer reported outstanding results from its clinical oncology trial. Pfizer shares reacted to the news during the session.`;
+    }
+    if (newsSection === '') {
+      newsSection = `\n• <b>Broad Market Update</b>\nMarkets are trading within recent ranges as investors digest macro data. Technology and growth shares lead gains.`;
+    }
+
+    let watchlistSection = '';
+    if (companies.length > 0) {
+      watchlistSection = `\n\n🎯 <b>Suggested Watchlist</b>\n${companies.map(c => `• ${c.toUpperCase()}`).join('\n')}`;
+    }
+
+    let memoryNotes = '';
+    if (memories.length > 0) {
+      memoryNotes = `\n\n🧠 <b>Based on your preferences:</b>\n${memories.map(m => `• ${m}`).join('\n')}`;
+    }
+
+    return `☀️ <b>Good Morning, ${name}.</b>\n\nHere's what matters today.${prioritySection}\n\n📰 <b>Markets</b>${newsSection}${watchlistSection}${memoryNotes}\n\n💡 <b>Why this matters to you:</b>\nThis directly connects to your role as a ${profession || 'Professional'} in the ${industries || 'General'} sector, where tech integrations and market shifts drive competitive advantage.\n\n📅 <b>Today's Focus:</b>\nReview sector-specific updates and position holdings accordingly.`;
+  }
+
+  _mockEveningSummaryResponse(systemInstruction) {
+    const nameMatch = systemInstruction.match(/greeting using the user's name \((.+?)\)/i) || systemInstruction.match(/evening summary for (.+?)(?:\.|\n|$)/i);
+    const name = nameMatch ? nameMatch[1].trim() : 'there';
+
+    return `🌙 <b>Evening Recap — ${name}</b>\n\nHope you had a productive day! Here is a summary of your interactions today:\n\n• <b>Topics Explored:</b> We reviewed semiconductor trends and verified the integration settings for your profile.\n• <b>Schedules Updated:</b> You adjusted your notification schedules to keep briefings aligned with your active hours.\n\n💡 <b>New facts remembered:</b> I recorded your preferences for semiconductor developments.\n\n💤 Rest well. See you tomorrow for your morning briefing!`;
+  }
+
+  _mockWeeklyDigestResponse(systemInstruction) {
+    const nameMatch = systemInstruction.match(/digest for (.+?)(?:\.|\n|$)/i) || systemInstruction.match(/greeting using the user's name \((.+?)\)/i);
+    const name = nameMatch ? nameMatch[1].trim() : 'there';
+
+    return `📋 <b>Weekly Intelligence Digest — ${name}</b>\n\nHere is your executive synthesis of the past week's market movements and personal insights:\n\n<b>📊 Week in Review</b>\n• We analyzed market developments across technology and biotech sectors.\n• 15 user requests were processed with persistent memory tracking.\n\n<b>📈 Sector Highlights</b>\n• <b>Tech:</b> AI infrastructure spend shows no signs of slowing, supported by hardware orders.\n• <b>Biotech:</b> Medical breakthroughs are driving investment interest in oncology.\n\n🎯 <b>Suggested Focus for Next Week:</b>\nKeep an eye on supply chain earnings to confirm hardware adoption rates.`;
   }
 }
