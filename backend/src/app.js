@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import healthRoutes from './routes/healthRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import financeRoutes from './routes/financeRoutes.js';
 import { errorMiddleware } from './middleware/errorMiddleware.js';
 import logger from './utils/logger.js';
 
@@ -22,6 +23,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/health', healthRoutes);
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/finance', financeRoutes);
 
 // Catch-all route for undefined endpoints
 app.use('*', (req, res, next) => {

@@ -1,9 +1,9 @@
-import { GeminiService } from './geminiService.js';
+import { aiService } from './aiService.js';
 import logger from '../utils/logger.js';
 
 export class MemorySummarizer {
   constructor() {
-    this.geminiService = new GeminiService();
+    this.aiService = aiService;
   }
 
   /**
@@ -16,7 +16,7 @@ export class MemorySummarizer {
       const textToSummarize = messages.map((m) => `${m.role}: ${m.content}`).join('\n');
       const prompt = `Summarize the key points of this conversation concisely in 3-4 bullet points for background context:`;
 
-      const summary = await this.geminiService.generateResponse({
+      const summary = await this.aiService.generateResponse({
         systemInstruction: prompt,
         contents: [{ role: 'user', parts: [{ text: textToSummarize }] }],
       });

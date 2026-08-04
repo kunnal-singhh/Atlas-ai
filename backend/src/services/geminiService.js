@@ -5,7 +5,7 @@ import logger from '../utils/logger.js';
 export class GeminiService {
   constructor() {
     this.ai = new GoogleGenAI({ apiKey: config.geminiApiKey });
-    this.modelName = 'gemini-2.5-flash';
+    this.modelName = config.geminiModel;
   }
 
   /**
@@ -36,15 +36,41 @@ export class GeminiService {
 
         return response.text;
       } catch (error) {
-        logger.warn(`Gemini API call failed (Attempt ${attempt}/${maxRetries}): ${error.message}`);
+        const isQuotaExceeded = error.status === 429;
 
-        if (attempt === maxRetries) {
-          logger.error('Gemini API retries exhausted:', { error: error.message, stack: error.stack });
-          throw error;
+        if (isQuotaExceeded) {
+          logger.warn(`Gemini API Quota Exceeded (Attempt ${attempt}/${maxRetries}): ${error.message}`);
+          
+          if (attempt === maxRetries) {
+            return "We are currently experiencing high demand. Please try again in a moment.";
+          }
+        } else {
+          logger.warn(`Gemini API call failed (Attempt ${attempt}/${maxRetries}): ${error.message}`);
+
+          if (attempt === maxRetries) {
+            logger.error('Gemini API retries exhausted:', { error: error.message, stack: error.stack });
+            throw error;
+          }
         }
 
-        // Wait with exponential backoff before retrying
-        await new Promise((resolve) => setTimeout(resolve, delay));
+        let waitTime = delay;
+
+        if (isQuotaExceeded) {
+          // Attempt to extract Retry-After header if available
+          let retryAfter = null;
+          if (error.response && typeof error.response.headers?.get === 'function') {
+             retryAfter = error.response.headers.get('retry-after');
+          }
+          
+          if (retryAfter && !isNaN(parseInt(retryAfter, 10))) {
+            waitTime = parseInt(retryAfter, 10) * 1000;
+          }
+        }
+
+        // Add exponential backoff with jitter (prevent immediate repeated retries on 429)
+        const jitter = Math.floor(Math.random() * 1000);
+        await new Promise((resolve) => setTimeout(resolve, waitTime + jitter));
+        
         delay *= 2;
       }
     }

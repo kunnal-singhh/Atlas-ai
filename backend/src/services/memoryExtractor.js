@@ -1,11 +1,11 @@
-import { GeminiService } from './geminiService.js';
+import { aiService } from './aiService.js';
 import { MemoryService } from './memoryService.js';
 import { MEMORY_EXTRACTION_PROMPT } from '../constants/memory.constants.js';
 import logger from '../utils/logger.js';
 
 export class MemoryExtractor {
   constructor() {
-    this.geminiService = new GeminiService();
+    this.aiService = aiService;
   }
 
   /**
@@ -18,7 +18,7 @@ export class MemoryExtractor {
         return;
       }
 
-      const responseText = await this.geminiService.generateResponse({
+      const responseText = await this.aiService.generateResponse({
         systemInstruction: MEMORY_EXTRACTION_PROMPT,
         contents: [
           {

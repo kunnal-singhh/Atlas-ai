@@ -14,6 +14,12 @@ export const config = {
   maxRetrievedMemories: parseInt(process.env.MAX_RETRIEVED_MEMORIES || '5', 10),
   maxMemorySummaryLength: parseInt(process.env.MAX_MEMORY_SUMMARY_LENGTH || '500', 10),
   minImportanceScoreThreshold: parseInt(process.env.MIN_IMPORTANCE_SCORE || '3', 10),
+
+  finnhubApiKey: process.env.FINNHUB_API_KEY || '',
+  financeNewsCategory: process.env.FINANCE_NEWS_CATEGORY || 'general',
+  financeCacheTtlMinutes: parseInt(process.env.FINANCE_CACHE_TTL_MINUTES || '30', 10),
+  geminiModel: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
+
 };
 
 if (!config.telegramBotToken) {
