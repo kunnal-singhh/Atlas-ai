@@ -70,7 +70,25 @@ app.get('/api/debug-messages', async (req, res) => {
     const users = await User.countDocuments();
     const messagesCount = await Message.countDocuments();
     const messages = await Message.find().sort({ createdAt: -1 }).limit(10).lean();
-    res.json({ users, messagesCount, messages });
+
+    // Helper to mask token
+    const maskString = (str) => {
+      if (!str) return 'undefined';
+      if (str.length < 8) return 'too short';
+      return `${str.substring(0, 4)}...${str.substring(str.length - 4)}`;
+    };
+
+    const envDebug = {
+      NODE_ENV: process.env.NODE_ENV,
+      configNodeEnv: config.nodeEnv,
+      PORT: process.env.PORT,
+      WEBHOOK_URL: config.webhookUrl,
+      TELEGRAM_BOT_TOKEN_MASKED: maskString(config.telegramBotToken),
+      MONGODB_URI_MASKED: maskString(config.mongodbUri),
+      GEMINI_API_KEY_MASKED: maskString(config.geminiApiKey)
+    };
+
+    res.json({ users, messagesCount, envDebug, messages });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
