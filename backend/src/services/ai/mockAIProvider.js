@@ -50,8 +50,49 @@ export class MockAIProvider {
       return this._financeIntelligence(systemInstruction);
     }
 
+    // ── Route 4.5: Tool Grounding Intercept (Module 10) ──
+    if (systemInstruction.includes('REAL-TIME GROUNDING:')) {
+      return this._mockToolGroundedResponse(systemInstruction);
+    }
+
     // ── Route 5: Standard Conversation ──
     return this._conversation(userMessage, systemInstruction);
+  }
+
+  /**
+   * Generates a deterministic mock response by parsing injected tool data from systemInstruction
+   */
+  _mockToolGroundedResponse(systemInstruction) {
+    // 1. Finance Tool
+    if (systemInstruction.includes('[RETRIEVED DATA: FINANCE]')) {
+      const match = systemInstruction.match(/\[RETRIEVED DATA: FINANCE\]\n([\s\S]*?)(?:\n\nREAL-TIME|\n\n\[RETRIEVED DATA:|\n\nCONVERSATION|$)/i);
+      const content = match ? match[1].trim() : '';
+      return `<b>📊 Executive Finance Update</b>\n\nI've analyzed the latest market updates:\n\n${content}\n\n💡 <b>Why it matters:</b>\nThis development reflects shift in market expectations and positioning, potentially impacting near-term sector performance.`;
+    }
+
+    // 2. Live Search Tool
+    if (systemInstruction.includes('[RETRIEVED DATA: LIVESEARCH]')) {
+      const match = systemInstruction.match(/\[RETRIEVED DATA: LIVESEARCH\]\n([\s\S]*?)(?:\n\nREAL-TIME|\n\n\[RETRIEVED DATA:|\n\nCONVERSATION|$)/i);
+      const content = match ? match[1].trim() : '';
+      // Search tools synthesize results directly, so we can just return it
+      return content;
+    }
+
+    // 3. Memory Tool
+    if (systemInstruction.includes('[RETRIEVED DATA: MEMORY]')) {
+      const match = systemInstruction.match(/\[RETRIEVED DATA: MEMORY\]\n([\s\S]*?)(?:\n\nREAL-TIME|\n\n\[RETRIEVED DATA:|\n\nCONVERSATION|$)/i);
+      const content = match ? match[1].trim() : '';
+      return `🧠 <b>Atlas Memory Engine</b>\n\nHere is what I currently remember about you:\n\n${content}\n\nI use these details to keep our briefings tailored to your interests. Let me know if you would like me to adjust or remove any facts!`;
+    }
+
+    // 4. Profile Tool
+    if (systemInstruction.includes('[RETRIEVED DATA: PROFILE]')) {
+      const match = systemInstruction.match(/\[RETRIEVED DATA: PROFILE\]\n([\s\S]*?)(?:\n\nREAL-TIME|\n\n\[RETRIEVED DATA:|\n\nCONVERSATION|$)/i);
+      const content = match ? match[1].trim() : '';
+      return `⚙️ <b>Your Profile Settings</b>\n\nHere is the active configuration retrieved from your database:\n\n${content}\n\nYou can update any of these details directly by using the /settings command.`;
+    }
+
+    return `I received grounded context, but it did not match registered tool formats.\n\nRaw Context:\n${systemInstruction}`;
   }
 
   // ───────────────────────────────────────────────────────────

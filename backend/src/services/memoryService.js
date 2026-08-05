@@ -7,24 +7,42 @@ export class MemoryService {
   /**
    * Creates or updates a memory record, avoiding duplicates
    */
-  static async saveMemory(telegramId, { fact, category, importanceScore, keywords, sourceConversationId }) {
+  static async saveMemory(telegramId, { fact, category, importanceScore, keywords, structuredData = {}, sourceConversationId }) {
     try {
       if (!fact || fact.trim().length < 3) return null;
 
-      // Check for existing similar memory (basic deduplication by keyword overlay/fact prefix)
+      // 1. Semantic Deduplication via structuredData (e.g. matching "NVIDIA" and "company_interest")
       const existingMemories = await Memory.find({ telegramId, category }).lean();
-      const duplicate = existingMemories.find(
-        (m) => m.fact.toLowerCase() === fact.toLowerCase().trim()
-      );
+      
+      let duplicate = null;
+
+      // First try semantic match if structured data exists
+      if (structuredData && structuredData.entity) {
+        duplicate = existingMemories.find(m => 
+          m.structuredData && 
+          m.structuredData.entity && 
+          m.structuredData.entity.toLowerCase() === structuredData.entity.toLowerCase() &&
+          m.structuredData.type === structuredData.type
+        );
+      }
+      
+      // Fallback to basic string match if no semantic match
+      if (!duplicate) {
+        duplicate = existingMemories.find(
+          (m) => m.fact.toLowerCase() === fact.toLowerCase().trim()
+        );
+      }
 
       if (duplicate) {
-        // Update existing record timestamp and bump importance if higher
+        // Semantic match found: Merge data rather than duplicating
         return await Memory.findByIdAndUpdate(
           duplicate._id,
           {
             $set: {
               lastAccessedAt: new Date(),
               importanceScore: Math.max(duplicate.importanceScore, importanceScore || 5),
+              // Optional: We could update the 'fact' string here to the newer phrasing, 
+              // but bumping importance and keywords is sufficient for merging.
             },
             $addToSet: { keywords: { $each: keywords || [] } },
           },
@@ -36,7 +54,8 @@ export class MemoryService {
       return await Memory.create({
         telegramId,
         fact: fact.trim(),
-        category: category || 'GENERAL',
+        category: category || 'INTEREST', // Default to INTEREST now that GENERAL is removed
+        structuredData,
         importanceScore: importanceScore || 5,
         keywords: keywords || [],
         sourceConversationId: sourceConversationId || null,
@@ -45,6 +64,39 @@ export class MemoryService {
     } catch (error) {
       logger.error('Error saving memory:', { error: error.message, telegramId });
       return null;
+    }
+  }
+
+  /**
+   * Cleans up garbage memories matching invalid patterns
+   */
+  static async cleanupInvalidMemories(telegramId = null) {
+    try {
+      const query = {
+        $or: [
+          { category: 'GENERAL' },
+          { fact: { $regex: /^user mentioned/i } },
+          { fact: { $regex: /\?$/ } },
+          { fact: { $regex: /^(what|who|why|how|explain|tell me|hello|hi|thanks)\b/i } }
+        ]
+      };
+
+      if (telegramId) {
+        query.telegramId = telegramId;
+      }
+
+      const totalBefore = await Memory.countDocuments(telegramId ? { telegramId } : {});
+      const result = await Memory.deleteMany(query);
+      const totalAfter = await Memory.countDocuments(telegramId ? { telegramId } : {});
+
+      return {
+        deleted: result.deletedCount,
+        remaining: totalAfter,
+        totalBefore
+      };
+    } catch (error) {
+      logger.error('Error cleaning up invalid memories:', error);
+      return { deleted: 0, error: error.message };
     }
   }
 

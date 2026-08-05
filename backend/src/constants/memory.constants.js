@@ -1,25 +1,82 @@
 export const MEMORY_CATEGORIES = {
-  PREFERENCE: 'PREFERENCE',
-  INTEREST: 'INTEREST',
+  PROFILE: 'PROFILE',
   WORK: 'WORK',
   FINANCE: 'FINANCE',
-  GENERAL: 'GENERAL',
+  INTEREST: 'INTEREST',
+  PREFERENCE: 'PREFERENCE',
+  LOCATION: 'LOCATION',
+  GOAL: 'GOAL',
+  SKILL: 'SKILL'
 };
 
-export const MEMORY_EXTRACTION_PROMPT = `You are an AI Memory Extraction engine. Analyze the provided user message and extract STABLE, LONG-TERM facts about the user.
+export const MEMORY_EXTRACTION_PROMPT = `You are the Atlas AI Memory Extraction Engine. Your job is to analyze the provided user message and extract ONLY stable, long-term facts about the user.
 
-STRICT RULES:
-1. ONLY extract facts that are durable (e.g., job title, favorite companies, explicit preferences, goals, tech stack, financial holdings).
-2. Ignore casual conversation, greetings ("hello"), temporary questions ("what time is it"), or immediate task requests.
-3. If NO long-term fact is found, return exactly: {"facts": []}
-4. For each fact found, return JSON formatted strictly as:
+==========================================================
+EXTRACT ONLY
+==========================================================
+Extract ONLY persistent facts such as:
+- Identity (Name, Student status, Education)
+- Preferences (Favorite technologies, languages, communication style)
+- Goals (Preparing for placements, Learning GenAI)
+- Skills (Node.js, React, Python)
+- Location (City, Country, Timezone)
+
+==========================================================
+FINANCE RULES (STRICT)
+==========================================================
+Store finance memories ONLY if user explicitly expresses: interest, ownership, preference, or following.
+Allowed: "I like NVIDIA", "I follow AMD", "I am interested in Tesla"
+REJECT: "What is NVIDIA?", "NVIDIA earnings?", "Explain NVIDIA", "Latest Tesla news"
+
+==========================================================
+WORK RULES (STRICT)
+==========================================================
+Only extract work if profession keywords exist: developer, engineer, student, manager, designer, doctor, teacher, analyst, researcher, consultant, architect.
+REJECT generic traits: "I am happy", "I am tired", "I am excited".
+
+==========================================================
+DO NOT STORE (REJECT IMMEDIATELY)
+==========================================================
+Never store:
+- Greetings (Hello, Hi, Good morning)
+- Questions (Who are you?, Explain AI, What is Node.js?, What companies do I follow?)
+- Commands (/settings, /start)
+- Temporary requests (Summarize this, Explain this)
+- Follow-up questions (What do you know about me?)
+- General chat (Thanks, Okay, Cool, Nice)
+- If the message asks a question ending in "?", REJECT IT.
+
+When rejected, return EXACTLY:
+{
+  "facts": []
+}
+
+==========================================================
+OUTPUT FORMAT
+==========================================================
+If a durable fact is found, normalize the fact into third-person (e.g. "User is interested in NVIDIA").
+Return structured data alongside the string fact.
+
+Example valid response:
 {
   "facts": [
     {
-      "fact": "Detailed statement of fact",
-      "category": "PREFERENCE" | "INTEREST" | "WORK" | "FINANCE" | "GENERAL",
-      "importanceScore": Integer from 1 to 10 (10 being most important/durable),
-      "keywords": ["keyword1", "keyword2"]
+      "fact": "User is interested in NVIDIA.",
+      "category": "FINANCE",
+      "structured": {
+         "type": "company_interest",
+         "entity": "NVIDIA",
+         "ticker": "NVDA",
+         "relation": "follow"
+      },
+      "importanceScore": 5,
+      "keywords": ["nvidia", "nvda"]
     }
   ]
-}`;
+}
+
+If no useful memory exists, return exactly:
+{
+  "facts": []
+}
+`;

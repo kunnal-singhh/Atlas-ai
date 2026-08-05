@@ -24,6 +24,10 @@ const conversationSchema = new mongoose.Schema(
     messageCount: {
       type: Number,
       default: 0
+    },
+    summary: {
+      type: String,
+      default: ''
     }
   },
   {

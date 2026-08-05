@@ -1,13 +1,13 @@
 export class FormatterService {
   /**
-   * Cleans text for display on Telegram
+   * Cleans and formats text for Telegram — converts Markdown to HTML
    * @param {string} text 
    * @returns {string}
    */
   static formatForTelegram(text) {
     if (!text) return '';
-    // Normalize excessive newlines
-    return text.replace(/\n{3,}/g, '\n\n').trim();
+    // Convert Markdown → Telegram HTML, then normalize excessive newlines
+    return FormatterService.markdownToHtml(text).replace(/\n{3,}/g, '\n\n').trim();
   }
 
   /**
@@ -31,11 +31,24 @@ export class FormatterService {
     // Inline code: `code` -> <code>code</code>
     html = html.replace(/`([^`\n]+)`/g, '<code>$1</code>');
 
+    // Headings: ### Heading -> <b>Heading</b>
+    html = html.replace(/^#{1,6}\s+(.+)$/gm, '<b>$1</b>');
+
     // Bold: **text** -> <b>text</b>
     html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
 
-    // Italic: *text* -> <i>text</i>
+    // Italic: *text* or _text_ -> <i>text</i>
     html = html.replace(/\*(.*?)\*/g, '<i>$1</i>');
+    html = html.replace(/_(.*?)_/g, '<i>$1</i>');
+
+    // Hyperlinks: [text](url) -> <a href="url">text</a>
+    html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2">$1</a>');
+
+    // Bullet lists: - item or * item -> • item
+    html = html.replace(/^[\-\*]\s+(.+)$/gm, '• $1');
+
+    // Numbered lists: 1. item stays as-is (already renders fine in Telegram)
+    html = html.replace(/^(\d+)\.\s+(.+)$/gm, '$1. $2');
 
     return html;
   }

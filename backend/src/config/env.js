@@ -20,6 +20,10 @@ export const config = {
   financeCacheTtlMinutes: parseInt(process.env.FINANCE_CACHE_TTL_MINUTES || '30', 10),
   geminiModel: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
 
+  // Module 10: Live Search (optional — graceful fallback if missing)
+  googleSearchApiKey: process.env.GOOGLE_SEARCH_API_KEY || '',
+  googleSearchEngineId: process.env.GOOGLE_SEARCH_ENGINE_ID || '',
+  searchCacheTtlMinutes: parseInt(process.env.SEARCH_CACHE_TTL_MINUTES || '15', 10),
 };
 
 if (!config.telegramBotToken) {

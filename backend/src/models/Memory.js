@@ -14,9 +14,24 @@ const memorySchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['PREFERENCE', 'INTEREST', 'WORK', 'FINANCE', 'GENERAL'],
-      default: 'GENERAL',
+      enum: ['PROFILE', 'WORK', 'FINANCE', 'INTEREST', 'PREFERENCE', 'LOCATION', 'GOAL', 'SKILL'],
+      default: 'INTEREST',
       index: true,
+    },
+    structuredData: {
+      type: new mongoose.Schema({
+        type: { type: String, trim: true },
+        entity: { type: String, trim: true },
+        ticker: { type: String, trim: true },
+        relation: { type: String, trim: true },
+        profession: { type: String, trim: true },
+        company: { type: String, trim: true },
+        location: { type: String, trim: true },
+        goal: { type: String, trim: true },
+        skill: { type: String, trim: true },
+        preference: { type: String, trim: true },
+      }, { _id: false }),
+      default: {},
     },
     importanceScore: {
       type: Number,

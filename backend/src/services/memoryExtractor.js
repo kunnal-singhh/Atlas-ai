@@ -3,6 +3,8 @@ import { MemoryService } from './memoryService.js';
 import { MEMORY_EXTRACTION_PROMPT } from '../constants/memory.constants.js';
 import logger from '../utils/logger.js';
 
+import { MemoryValidator } from './memoryValidator.js';
+
 export class MemoryExtractor {
   constructor() {
     this.aiService = aiService;
@@ -34,12 +36,19 @@ export class MemoryExtractor {
 
       if (parsed.facts && Array.isArray(parsed.facts)) {
         for (const item of parsed.facts) {
+          // Pass through the strict validator
+          if (!MemoryValidator.isValid(item)) {
+            logger.info(`[MemoryExtractor] Memory rejected by Validator: "${item.fact}"`);
+            continue;
+          }
+
           if (item.fact && item.importanceScore >= 3) {
             await MemoryService.saveMemory(telegramId, {
               fact: item.fact,
               category: item.category,
               importanceScore: item.importanceScore,
               keywords: item.keywords,
+              structuredData: item.structured || {},
               sourceConversationId,
             });
           }
