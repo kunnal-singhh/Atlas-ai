@@ -78,7 +78,8 @@ app.use((req, res, next) => {
       url: req.originalUrl,
       headers: req.headers,
       hasBody: !!req.body,
-      bodyType: typeof req.body
+      bodyType: typeof req.body,
+      body: req.body
     };
     global.webhookDebugLogs.push(logEntry);
     if (global.webhookDebugLogs.length > 50) global.webhookDebugLogs.shift();
