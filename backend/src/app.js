@@ -62,6 +62,20 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/finance', financeRoutes);
 app.use('/api/schedule', scheduleRoutes);
 
+// Temporary debug route to inspect live Render DB state
+import { Message } from './models/Message.js';
+import { User } from './models/User.js';
+app.get('/api/debug-messages', async (req, res) => {
+  try {
+    const users = await User.countDocuments();
+    const messagesCount = await Message.countDocuments();
+    const messages = await Message.find().sort({ createdAt: -1 }).limit(10).lean();
+    res.json({ users, messagesCount, messages });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // NOTE: No catch-all 404 here intentionally.
 // The Telegraf webhook middleware is registered dynamically in server.js
 // via atlasBot.start(app) AFTER this file is loaded. A catch-all here
