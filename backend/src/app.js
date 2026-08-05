@@ -6,6 +6,7 @@ import financeRoutes from './routes/financeRoutes.js';
 import scheduleRoutes from './routes/scheduleRoutes.js';
 import { errorMiddleware } from './middleware/errorMiddleware.js';
 import logger from './utils/logger.js';
+import { config } from './config/env.js';
 
 const app = express();
 
