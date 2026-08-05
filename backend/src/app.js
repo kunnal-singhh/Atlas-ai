@@ -36,7 +36,7 @@ app.use(cors({
   credentials: true
 }));
 
-// Body Parsers - Skip express.json() for Telegram webhook updates
+// Body Parsers - Skip express.json() and express.urlencoded() for Telegram webhook updates
 app.use((req, res, next) => {
   const isWebhook = req.originalUrl.startsWith('/bot') || 
                     (process.env.WEBHOOK_PATH && req.originalUrl === process.env.WEBHOOK_PATH);
@@ -48,7 +48,17 @@ app.use((req, res, next) => {
   }
 });
 
-app.use(express.urlencoded({ extended: true }));
+app.use((req, res, next) => {
+  const isWebhook = req.originalUrl.startsWith('/bot') || 
+                    (process.env.WEBHOOK_PATH && req.originalUrl === process.env.WEBHOOK_PATH);
+  
+  if (isWebhook) {
+    next();
+  } else {
+    express.urlencoded({ extended: true })(req, res, next);
+  }
+});
+
 app.use(express.static('src/public'));
 
 // Request logging
