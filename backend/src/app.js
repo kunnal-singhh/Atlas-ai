@@ -66,6 +66,26 @@ app.use('/api/schedule', scheduleRoutes);
 // Temporary debug route to inspect live Render DB state
 import { Message } from './models/Message.js';
 import { User } from './models/User.js';
+
+// Simple in-memory log buffer for troubleshooting
+global.webhookDebugLogs = global.webhookDebugLogs || [];
+
+app.use((req, res, next) => {
+  if (req.originalUrl.startsWith('/bot')) {
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      method: req.method,
+      url: req.originalUrl,
+      headers: req.headers,
+      hasBody: !!req.body,
+      bodyType: typeof req.body
+    };
+    global.webhookDebugLogs.push(logEntry);
+    if (global.webhookDebugLogs.length > 50) global.webhookDebugLogs.shift();
+  }
+  next();
+});
+
 app.get('/api/debug-messages', async (req, res) => {
   try {
     const users = await User.countDocuments();
@@ -89,7 +109,13 @@ app.get('/api/debug-messages', async (req, res) => {
       GEMINI_API_KEY_MASKED: maskString(config.geminiApiKey)
     };
 
-    res.json({ users, messagesCount, envDebug, messages });
+    res.json({ 
+      users, 
+      messagesCount, 
+      envDebug, 
+      webhookLogs: global.webhookDebugLogs, 
+      messages 
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
