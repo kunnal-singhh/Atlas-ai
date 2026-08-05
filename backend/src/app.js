@@ -59,8 +59,6 @@ app.use((req, res, next) => {
   }
 });
 
-app.use(express.static('src/public'));
-
 // Request logging
 app.use((req, res, next) => {
   logger.info(`${req.method} ${req.originalUrl}`);
