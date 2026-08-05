@@ -5,6 +5,19 @@ import logger from '../utils/logger.js';
 const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 3000;
 
+// Monitor mongoose connection status
+mongoose.connection.on('error', (err) => {
+  logger.error(`Mongoose connection error: ${err.message}`, { error: err });
+});
+
+mongoose.connection.on('disconnected', () => {
+  logger.warn('Mongoose disconnected from MongoDB. Attempting to reconnect automatically...');
+});
+
+mongoose.connection.on('reconnected', () => {
+  logger.info('Mongoose successfully reconnected to MongoDB.');
+});
+
 export const connectDatabase = async () => {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {

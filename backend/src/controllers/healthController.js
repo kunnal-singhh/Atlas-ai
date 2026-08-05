@@ -11,11 +11,20 @@ export const getHealthStatus = (req, res, next) => {
       3: 'Disconnecting'
     };
 
+    const isConnected = dbState === 1;
     const healthData = {
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
       database: dbStatusMap[dbState] || 'Unknown'
     };
+
+    if (!isConnected) {
+      return res.status(503).json({
+        success: false,
+        message: 'Atlas AI backend service is unhealthy: Database not connected',
+        data: healthData
+      });
+    }
 
     return sendSuccess(res, 'Atlas AI backend service is healthy', healthData, 200);
   } catch (error) {

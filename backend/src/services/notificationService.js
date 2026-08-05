@@ -1,6 +1,7 @@
 import logger from '../utils/logger.js';
 import { NotificationPreference } from '../models/NotificationPreference.js';
 import { BriefingService } from './briefingService.js';
+import { FormatterService } from './formatterService.js';
 
 class NotificationService {
   constructor() {
@@ -32,10 +33,18 @@ class NotificationService {
     try {
       logger.info(`Sending ${briefingType} briefing to user ${telegramId}`);
       
-      // Use bot.telegram.sendMessage with HTML parse mode
-      await this.bot.telegram.sendMessage(telegramId, htmlContent, {
-        parse_mode: 'HTML',
-      });
+      const chunks = FormatterService.chunkMessage(htmlContent, 4000);
+      
+      for (const chunk of chunks) {
+        try {
+          await this.bot.telegram.sendMessage(telegramId, chunk, {
+            parse_mode: 'HTML',
+          });
+        } catch (htmlError) {
+          logger.warn(`Telegram HTML parse failed for briefing chunk to ${telegramId}. Retrying as plain text... Error: ${htmlError.message}`);
+          await this.bot.telegram.sendMessage(telegramId, chunk);
+        }
+      }
 
       // Update preference tracking timestamp
       const dateNow = new Date();

@@ -44,11 +44,12 @@ export class AtlasBot {
         throw new Error('[Bot Init] Express instance is required for production webhook setup.');
       }
 
-      const fullWebhookUrl = `${this.config.webhookUrl}${this.config.webhookPath}`;
+            const fullWebhookUrl = `${this.config.webhookUrl}${this.config.webhookPath}`;
       expressApp.use(this.bot.webhookCallback(this.config.webhookPath));
       await this.bot.telegram.setWebhook(fullWebhookUrl);
       
-      console.log(`[Bot Init] Webhook successfully established at: ${fullWebhookUrl}`);
+      const maskedWebhookUrl = fullWebhookUrl.replace(this.config.token, 'BOT_TOKEN_SECRET');
+      console.log(`[Bot Init] Webhook successfully established at: ${maskedWebhookUrl}`);
     } else {
       await this.bot.telegram.deleteWebhook({ drop_pending_updates: true });
       console.log('[Bot Init] Long Polling started successfully (Development Mode)...');

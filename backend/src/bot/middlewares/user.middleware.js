@@ -1,10 +1,11 @@
 import { findOrCreateUser } from '../../services/userService.js';
+import logger from '../../utils/logger.js';
 
 export const userMiddleware = async (ctx, next) => {
   const telegramUser = ctx.from;
 
   if (!telegramUser) {
-    console.warn('[User Middleware] Update received without user context.');
+    logger.warn('[User Middleware] Update received without user context.');
     return next();
   }
 
@@ -25,7 +26,7 @@ export const userMiddleware = async (ctx, next) => {
 
     return next();
   } catch (error) {
-    console.error(`[User Middleware] Exception resolving user ${telegramUser.id}:`, error);
+    logger.error(`[User Middleware] Exception resolving user ${telegramUser?.id}: ${error.message}`, { stack: error.stack });
     throw error;
   }
 };
